@@ -6,6 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract VotingContract is Ownable {
     // increase the voting id when the owner begin the vote campaign
     uint256 public nextCampaignId;
+    address public payingToken;
 
     // struct to store the vote campaign info
     struct VoteCampaign {
@@ -53,7 +54,39 @@ contract VotingContract is Ownable {
         _;
     }
 
-    modifier validCampaign() {
-        require()
+    // Modifier to check if campaign exists and is active
+    modifier isValidCampaign(uint256 campaignId) {
+        require(voteCampaigns[campaignId].isActive, "Voting campaign does not exist or is not active");
+        _;
+    }
+
+    modifier onlyCampaignOwner(uint256 campaignId) {
+        require(voteCampaigns[campaignId].owner == msg.sender, "Only campaign owner can modify campaign informations");
+        _;
+    }
+
+    modifier validNextBatchId(uint256 campaignId, uint256 batchId) {
+        require(batchId == campaignToBatchIds[campaignId] + 1 && campaignBatchIdToMerkleRoot[campaignId][batchId] == bytes32(0), "Invalid batch Id provided");
+        _;
+    }
+
+    modifier uniqueMerkleRoot(uint campaignId, bytes32 merkleRoot){
+        require(!campaignVoteHashes[campaignId][merkleRoot], "Duplicated voting result found!");
+        _;
+    }
+
+    constructor(address _payingToken) Ownable(msg.sender) {
+        payingToken = _payingToken;
+    }
+
+    // function for owner to set uploader
+    function setUploader(address _newUploader, bool _isAllowed) external onlyOwner {
+        require(_newUploader != address(0), "Zero address");
+        uploaders[_newUploader] = _isAllowed;
+    }
+
+    function setPayingToken(address _payingToken) external onlyOwner {
+        require(token != address(0), "Zero address");
+        payingToken = _payingToken;
     }
 }
