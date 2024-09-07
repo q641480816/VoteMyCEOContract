@@ -18,7 +18,7 @@ interface IERC20 {
     ) external returns (bool);
 }
 
-contract VotingContract is Ownable, ReentrancyGuard {
+contract VotingCampaignContract is Ownable, ReentrancyGuard {
     // increase the voting id when the owner begin the vote campaign
     uint256 public nextCampaignId;
     IERC20 public token;
@@ -147,6 +147,7 @@ contract VotingContract is Ownable, ReentrancyGuard {
 
     constructor(address _payingToken) Ownable(msg.sender) {
         token = IERC20(_payingToken);
+        costPerVote = 10 * 10 ** token.decimals();
     }
 
     // function for owner to set uploader
@@ -192,7 +193,7 @@ contract VotingContract is Ownable, ReentrancyGuard {
         string calldata _campaignName,
         string calldata _metadata,
         string[] calldata _options
-    ) external onlyOwner returns (uint256) {
+    ) external returns (uint256) {
         require(
             _options.length > 1 && _options.length < 5,
             "Options must be more than one and smaller than 5"
@@ -312,6 +313,14 @@ contract VotingContract is Ownable, ReentrancyGuard {
         uint256 batchId
     ) public view returns (bytes32) {
         return campaignBatchIdToMerkleRoot[campaignId][batchId];
+    }
+
+    function getUploader(address uploader) public view returns (bool) {
+        return uploaders[uploader];
+    }
+
+    function getCampaign(uint256 campaignId) public view returns (VoteCampaign memory){
+        return voteCampaigns[campaignId];
     }
 
     receive() external payable {
