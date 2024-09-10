@@ -16,6 +16,7 @@ interface IERC20 {
         address recipient,
         uint256 amount
     ) external returns (bool);
+    function getTokenAddress() external view returns (address);
 }
 
 contract VotingCampaignContract is Ownable, ReentrancyGuard {
@@ -321,6 +322,10 @@ contract VotingCampaignContract is Ownable, ReentrancyGuard {
 
     function getCampaign(uint256 campaignId) public view returns (VoteCampaign memory){
         return voteCampaigns[campaignId];
+    }
+
+    function getTokenAndCost() public view returns (address, uint256){
+        return(token.getTokenAddress(), costPerVote);
     }
 
     receive() external payable {
